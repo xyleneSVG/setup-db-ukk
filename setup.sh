@@ -83,10 +83,10 @@ do
   sleep 5
 
   echo "👤 [3/4] Membuat user database: $username"
-  docker exec "$container_name" mariadb -u root -e "DROP USER IF EXISTS '$username'@'%';"
-  docker exec "$container_name" mariadb -u root -e "CREATE USER '$username'@'%' IDENTIFIED BY '$password';"
-  docker exec "$container_name" mariadb -u root -e "GRANT ALL PRIVILEGES ON *.* TO '$username'@'%' WITH GRANT OPTION;"
-  docker exec "$container_name" mariadb -u root -e "FLUSH PRIVILEGES;"
+  docker exec "$container_name" mariadb -h 127.0.0.1 -u root -p"$DB_ROOT_PASSWORD" -e "DROP USER IF EXISTS '$username'@'%';"
+  docker exec "$container_name" mariadb -h 127.0.0.1 -u root -p"$DB_ROOT_PASSWORD" -e "CREATE USER '$username'@'%' IDENTIFIED BY '$password';"
+  docker exec "$container_name" mariadb -h 127.0.0.1 -u root -p"$DB_ROOT_PASSWORD" -e "GRANT ALL PRIVILEGES ON *.* TO '$username'@'%' WITH GRANT OPTION;"
+  docker exec "$container_name" mariadb -h 127.0.0.1 -u root -p"$DB_ROOT_PASSWORD" -e "FLUSH PRIVILEGES;"
 
   echo "📲 [4/4] Mengirim notifikasi WhatsApp ke $wa_number..."
   CLEAN_MSG=$(echo -e "Halo $nama! 👋\n\nAkun Database UKK kamu:\n👤 User: $username\n🔑 Pass: $password\n🌐 Port: $port\n🖥️ Host: $SERVER_HOST\n\nLogin phpMyAdmin: http://$SERVER_HOST:${PMA_PORT}")
