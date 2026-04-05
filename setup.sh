@@ -55,7 +55,7 @@ do
   username="${userbase}_${kelas_slug}"
   password=$(gen_pass)
   port=$((DB_BASE_PORT + i))
-  container_name="container_${username}"
+  container_name="container_ukk_${username}"
 # ==========================================
   echo "🚀 [1/4] Membuat container: $container_name (Port: $port)"
   docker rm -f "$container_name" 2>/dev/null
