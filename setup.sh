@@ -12,6 +12,7 @@ echo "📊 Menyiapkan file output: $OUTPUT_FILE"
 echo "nama,kelas,username,password,port" > "$OUTPUT_FILE"
 # ==========================================
 gen_pass() { tr -dc A-Za-z0-9 </dev/urandom | head -c 6; }
+
 gen_user() {
   local input="$1"
   if [[ "$input" == *"_"* ]]; then
@@ -20,7 +21,9 @@ gen_user() {
     echo "$input" | tr '[:upper:]' '[:lower:]' | tr -cd 'a-z'
   fi
 }
+
 gen_kelas() { echo "$1" | tr '[:upper:]' '[:lower:]' | tr -d ' ' | sed 's/xiii//'; }
+
 send_wa() {
   local target_phone="$1"
   local raw_message="$2"
@@ -42,7 +45,8 @@ if [ ! -f "$SSL_PATH/ca.pem" ]; then
   openssl genrsa 2048 > "$SSL_PATH/server-key.pem"
   openssl req -new -key "$SSL_PATH/server-key.pem" -out "$SSL_PATH/server.csr" -subj "/CN=$SERVER_HOST"
   openssl x509 -req -in "$SSL_PATH/server.csr" -days 3650 -CA "$SSL_PATH/ca.pem" -CAkey "$SSL_PATH/ca-key.pem" -set_serial 01 -out "$SSL_PATH/server-cert.pem"
-  chmod 600 "$SSL_PATH"/*.pem
+  chmod 755 "$SSL_PATH"
+  chmod 644 "$SSL_PATH"/*.pem
   echo "✅ SSL Berhasil dibuat."
 fi
 # ==========================================
@@ -55,15 +59,14 @@ do
   wa_number=$(echo "$item" | cut -d '|' -f3)
 
   nama=$(echo "$nama_raw" | sed 's/_/ /g')
-  kelas_display=$(echo "$kelas_raw" | sed 's/_/ /g')
-
-  userbase=$(gen_user "$nama")
+  
+  userbase=$(gen_user "$nama_raw")
   kelas_slug=$(gen_kelas "$kelas_raw") 
   username="${userbase}_${kelas_slug}"
   password=$(gen_pass)
   port=$((DB_BASE_PORT + i))
   container_name="ukk_${username}"
-# ==========================================
+
   echo "🚀 [1/4] Membuat container: $container_name (Port: $port)"
   docker rm -f "$container_name" 2>/dev/null
   docker run -d \
@@ -79,27 +82,27 @@ do
     --health-timeout=3s \
     --health-retries=10 \
     mariadb:"${DB_VERSION}"
-# ==========================================
+
   echo "⏳ [2/4] Menunggu database stabil..."
   until [ "$(docker inspect -f '{{.State.Health.Status}}' "$container_name")" = "healthy" ]; do 
     sleep 2
   done
   sleep 5
-# ==========================================
+
   echo "👤 [3/4] Membuat user database: $username"
   docker exec "$container_name" mariadb -u root -e "CREATE USER IF NOT EXISTS '$username'@'%' IDENTIFIED BY '$password'; GRANT ALL PRIVILEGES ON *.* TO '$username'@'%'; FLUSH PRIVILEGES;"
-# ==========================================
+
   echo "📲 [4/4] Mengirim notifikasi WhatsApp ke $wa_number..."
   CLEAN_MSG=$(echo -e "Halo $nama! 👋\n\nAkun Database UKK kamu:\n👤 User: $username\n🔑 Pass: $password\n🌐 Port: $port\n🖥️ Host: $SERVER_HOST\n\nLogin phpMyAdmin: http://$SERVER_HOST:${PMA_PORT}")
   send_wa "$wa_number" "$CLEAN_MSG"
+  
   echo "$nama,$kelas_raw,$username,$password,$port" >> "$OUTPUT_FILE"
   echo "✅ Selesai untuk $nama."
   echo "------------------------------------------"
   ((i++))
 done
-# ==========================================
+
 echo "🌐 Menjalankan phpMyAdmin Global..."
 docker rm -f phpmyadmin_ukk 2>/dev/null
 docker run -d --name phpmyadmin_ukk -e PMA_ARBITRARY=1 -p ${PMA_PORT}:80 phpmyadmin
-# ==========================================
 echo "🏁 SEMUA PROSES SELESAI!"
