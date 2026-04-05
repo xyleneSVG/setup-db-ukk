@@ -83,7 +83,8 @@ do
   sleep 5
 
   echo "👤 [3/4] Membuat user database: $username"
-  docker exec "$container_name" mariadb -u root -e "CREATE USER IF NOT EXISTS '$username'@'%' IDENTIFIED BY '$password';"
+  docker exec "$container_name" mariadb -u root -e "DROP USER IF EXISTS '$username'@'%';"
+  docker exec "$container_name" mariadb -u root -e "CREATE USER '$username'@'%' IDENTIFIED BY '$password';"
   docker exec "$container_name" mariadb -u root -e "GRANT ALL PRIVILEGES ON *.* TO '$username'@'%' WITH GRANT OPTION;"
   docker exec "$container_name" mariadb -u root -e "FLUSH PRIVILEGES;"
 
