@@ -2,3 +2,4 @@ ssl/*
 .env
 ukk_account_database.csv
 sessions
+pma_config.php
