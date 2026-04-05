@@ -12,7 +12,14 @@ echo "📊 Menyiapkan file output: $OUTPUT_FILE"
 echo "nama,kelas,username,password,port" > "$OUTPUT_FILE"
 # ==========================================
 gen_pass() { tr -dc A-Za-z0-9 </dev/urandom | head -c 6; }
-gen_user() { echo "$1" | tr '[:upper:]' '[:lower:]' | tr -cd 'a-z' | cut -c1-6; }
+gen_user() {
+  local input="$1"
+  if [[ "$input" == *"_"* ]]; then
+    echo "$input" | cut -d'_' -f2- | tr '[:upper:]' '[:lower:]' | tr -cd 'a-z'
+  else
+    echo "$input" | tr '[:upper:]' '[:lower:]' | tr -cd 'a-z'
+  fi
+}
 gen_kelas() { echo "$1" | tr '[:upper:]' '[:lower:]' | tr -d ' ' | sed 's/xiii//'; }
 send_wa() {
   local target_phone="$1"
@@ -55,7 +62,7 @@ do
   username="${userbase}_${kelas_slug}"
   password=$(gen_pass)
   port=$((DB_BASE_PORT + i))
-  container_name="container_ukk_${username}"
+  container_name="ukk_${username}"
 # ==========================================
   echo "🚀 [1/4] Membuat container: $container_name (Port: $port)"
   docker rm -f "$container_name" 2>/dev/null
