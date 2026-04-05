@@ -90,7 +90,9 @@ do
   sleep 5
 
   echo "👤 [3/4] Membuat user database: $username"
-  docker exec "$container_name" mariadb -u root -e "CREATE USER IF NOT EXISTS '$username'@'%' IDENTIFIED BY '$password'; GRANT ALL PRIVILEGES ON *.* TO '$username'@'%'; FLUSH PRIVILEGES;"
+  docker exec "$container_name" mariadb -u root -e "CREATE USER IF NOT EXISTS '$username'@'%' IDENTIFIED BY '$password';"
+  docker exec "$container_name" mariadb -u root -e "GRANT ALL PRIVILEGES ON *.* TO '$username'@'%' WITH GRANT OPTION;"
+  docker exec "$container_name" mariadb -u root -e "FLUSH PRIVILEGES;"
 
   echo "📲 [4/4] Mengirim notifikasi WhatsApp ke $wa_number..."
   CLEAN_MSG=$(echo -e "Halo $nama! 👋\n\nAkun Database UKK kamu:\n👤 User: $username\n🔑 Pass: $password\n🌐 Port: $port\n🖥️ Host: $SERVER_HOST\n\nLogin phpMyAdmin: http://$SERVER_HOST:${PMA_PORT}")
