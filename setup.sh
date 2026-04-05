@@ -12,9 +12,7 @@ echo "📊 Menyiapkan file output: $OUTPUT_FILE"
 echo "nama,kelas,username,password,port" > "$OUTPUT_FILE"
 # ==========================================
 gen_pass() { tr -dc A-Za-z0-9 </dev/urandom | head -c 6; }
-
 gen_user() { echo "$1" | tr '[:upper:]' '[:lower:]' | tr -cd 'a-z'; }
-
 gen_kelas() { echo "$1" | tr '[:upper:]' '[:lower:]' | tr -d ' ' | sed 's/xiii//'; }
 
 send_wa() {
@@ -89,7 +87,8 @@ do
   docker exec "$container_name" mariadb -h 127.0.0.1 -u root -p"$DB_ROOT_PASSWORD" -e "FLUSH PRIVILEGES;"
 
   echo "📲 [4/4] Mengirim notifikasi WhatsApp ke $wa_number..."
-  CLEAN_MSG=$(echo -e "Halo $nama! 👋\n\nAkun Database UKK kamu:\n👤 User: $username\n🔑 Pass: $password\n🌐 Port: $port\n🖥️ Host: $SERVER_HOST\n\nLogin phpMyAdmin: http://$SERVER_HOST:${PMA_PORT}")
+  CLEAN_MSG=$(echo -e "Halo $nama! 👋\n\nAkun Database UKK kamu:\n👤 User: $username\n🔑 Pass: $password\n🌐 Port: $port\n🖥️ Host: $SERVER_HOST\n\n🛡️ *PENTING (SSL Error)*:\nJika login lewat Terminal/CMD gagal karena SSL, gunakan perintah:\nmariadb -h $SERVER_HOST -P $port -u $username -p --ssl-verify-server-cert=0\n\nLogin phpMyAdmin: http://$SERVER_HOST:${PMA_PORT}")
+  
   send_wa "$wa_number" "$CLEAN_MSG"
   
   echo "$nama,$kelas_raw,$username,$password,$port" >> "$OUTPUT_FILE"
