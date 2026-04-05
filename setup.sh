@@ -13,14 +13,7 @@ echo "nama,kelas,username,password,port" > "$OUTPUT_FILE"
 # ==========================================
 gen_pass() { tr -dc A-Za-z0-9 </dev/urandom | head -c 6; }
 
-gen_user() {
-  local input="$1"
-  if [[ "$input" == *"_"* ]]; then
-    echo "$input" | cut -d'_' -f2- | tr '[:upper:]' '[:lower:]' | tr -cd 'a-z'
-  else
-    echo "$input" | tr '[:upper:]' '[:lower:]' | tr -cd 'a-z'
-  fi
-}
+gen_user() { echo "$1" | tr '[:upper:]' '[:lower:]' | tr -cd 'a-z'; }
 
 gen_kelas() { echo "$1" | tr '[:upper:]' '[:lower:]' | tr -d ' ' | sed 's/xiii//'; }
 
