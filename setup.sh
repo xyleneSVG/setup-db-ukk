@@ -29,6 +29,20 @@ send_wa() {
   echo "📡 Response: $response"
 }
 # ==========================================
+echo "🔐 Memeriksa konfigurasi SSL..."
+mkdir -p "$SSL_PATH"
+if [ ! -f "$SSL_PATH/ca.pem" ]; then
+  echo "🔑 Generating SSL Certificates untuk $SERVER_HOST..."
+  openssl genrsa 2048 > "$SSL_PATH/ca-key.pem"
+  openssl req -new -x509 -nodes -days 3650 -key "$SSL_PATH/ca-key.pem" -out "$SSL_PATH/ca.pem" -subj "/CN=MariaDB-CA"
+  openssl genrsa 2048 > "$SSL_PATH/server-key.pem"
+  openssl req -new -key "$SSL_PATH/server-key.pem" -out "$SSL_PATH/server.csr" -subj "/CN=$SERVER_HOST"
+  openssl x509 -req -in "$SSL_PATH/server.csr" -days 3650 -CA "$SSL_PATH/ca.pem" -CAkey "$SSL_PATH/ca-key.pem" -set_serial 01 -out "$SSL_PATH/server-cert.pem"
+  chmod 755 "$SSL_PATH"
+  chmod 644 "$SSL_PATH"/*.pem
+  echo "✅ SSL Berhasil dibuat."
+fi
+# ==========================================
 IFS=',' read -r -a DATA_ARRAY <<< "$STUDENT_DATA"
 i=0
 for item in "${DATA_ARRAY[@]}"
@@ -53,6 +67,7 @@ do
     -e MYSQL_ROOT_PASSWORD="$DB_ROOT_PASSWORD" \
     -p ${port}:3306 \
     -v $(pwd)/my.cnf:/etc/mysql/conf.d/z-custom.cnf \
+    -v $(pwd)/"$SSL_PATH":/etc/mysql/ssl \
     --memory="${CONTAINER_MEMORY}" \
     --cpus="${CONTAINER_CPUS}" \
     --health-cmd="mariadb-admin ping -h localhost --silent" \
