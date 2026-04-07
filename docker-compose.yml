@@ -1,0 +1,40 @@
+services:
+  ukk_database:
+    image: mysql:8.0
+    container_name: ukk_database
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: "${CONTAINER_CPUS}"
+          memory: ${CONTAINER_MEMORY}
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      STUDENT_DATA: ${STUDENT_DATA}
+      OUTPUT_FILENAME: ${OUTPUT_FILE}
+      SHEET_API_URL: ${SHEET_API_URL}
+      EVENT: ${EVENT}
+    ports:
+      - "${DB_BASE_PORT}:3306"
+    volumes:
+      - ./init-db.sh:/docker-entrypoint-initdb.d/init-db.sh:ro
+      - ./output:/mnt/kredensial
+    networks:
+      - ukk_network
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: ukk_phpmyadmin
+    restart: always
+    ports:
+      - "${PMA_BASE_PORT}:80"
+    environment:
+      PMA_HOST: ukk_database
+      PMA_ARBITRARY: 0
+      PMA_VERBOSE: UKK_DB_SERVER
+    networks:
+      - ukk_network
+
+networks:
+  ukk_network:
+    driver: bridge

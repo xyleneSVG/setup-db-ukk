@@ -1,6 +1,2 @@
-ssl/*
 .env
 ukk_accounts_database.csv
-sessions
-pma_config.php
-docker-compose.yml
