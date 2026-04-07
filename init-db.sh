@@ -71,5 +71,5 @@ if [ -n "$SHEET_API_URL" ]; then
 fi
 
 cp "$TEMP_CSV" "$CSV_FILE"
-chmod 666 "$CSV_FILE"
+chmod 777 "$CSV_FILE"
 echo "Done! Data sent to Spreadsheet and CSV created."
