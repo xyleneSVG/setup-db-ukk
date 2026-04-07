@@ -1,6 +1,6 @@
 services:
   ukk_database:
-    image: mariadb:latest
+    image: mysql:latest
     container_name: ukk_database
     restart: always
     deploy:
