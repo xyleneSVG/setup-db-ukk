@@ -1,3 +1,5 @@
+version: "3.9"
+
 services:
   ukk_database:
     image: mysql:latest
@@ -7,7 +9,7 @@ services:
       resources:
         limits:
           cpus: "${CONTAINER_CPUS}"
-          memory: ${CONTAINER_MEMORY}
+          memory: "${CONTAINER_MEMORY}"
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
       STUDENT_DATA: ${STUDENT_DATA}
@@ -32,6 +34,22 @@ services:
       PMA_HOST: ukk_database
       PMA_ARBITRARY: 0
       PMA_VERBOSE: UKK_DB_SERVER
+    networks:
+      - ukk_network
+
+  dashboard:
+    build: .
+    container_name: ukk_dashboard
+    restart: always
+    ports:
+      - "8888:8888"
+    volumes:
+      - .:/app
+      - /var/run/docker.sock:/var/run/docker.sock
+    working_dir: /app/dashboard
+    environment:
+      - PYTHONUNBUFFERED=1
+      - HOST_PROJECT_PATH=${PWD}
     networks:
       - ukk_network
 

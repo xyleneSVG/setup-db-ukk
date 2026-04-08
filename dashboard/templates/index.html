@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Konfigurasi UKK Database</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f4f6f9; }
+        .card { border-radius: 12px; }
+        /* Kustomisasi scrollbar untuk tabel agar rapi */
+        .table-wrapper { max-height: 300px; overflow-y: auto; }
+        thead th { position: sticky; top: 0; z-index: 1; }
+    </style>
+</head>
+<body>
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-md-10">
+            
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-primary text-white p-4 text-center" style="border-radius: 12px 12px 0 0;">
+                    <h3 class="mb-0 fw-bold">⚙️ Dashboard Konfigurasi UKK</h3>
+                    <p class="mb-0 text-light mt-1 small">Atur kredensial, resource container, dan URL API</p>
+                </div>
+                
+                <div class="card-body p-4 p-md-5">
+                    <form method="post" id="configForm">
+                        
+                        <h5 class="text-primary border-bottom pb-2 mb-3">Kredensial & Keamanan</h5>
+                        <div class="row mb-3">
+                            <div class="col-md-6 mb-3 mb-md-0">
+                                <label class="form-label fw-semibold">DB Root Password</label>
+                                <input type="text" name="DB_ROOT_PASSWORD" class="form-control form-control-lg bg-light" value="{{ env.DB_ROOT_PASSWORD }}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold text-danger">Dashboard Password (Login)</label>
+                                <input type="text" name="DASHBOARD_PASSWORD" class="form-control form-control-lg border-danger" value="{{ env.DASHBOARD_PASSWORD }}" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Nama Event</label>
+                            <input type="text" name="EVENT" class="form-control form-control-lg" value="{{ env.EVENT }}" required>
+                        </div>
+
+                        <h5 class="text-primary border-bottom pb-2 mb-3 mt-4">Data Siswa</h5>
+                        <div class="mb-4">
+                            <input type="hidden" name="STUDENT_DATA" id="hiddenStudentData" value="{{ env.STUDENT_DATA }}">
+                            
+                            <div class="table-responsive border rounded bg-white table-wrapper">
+                                <table class="table table-hover table-sm mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th style="width: 5%;">No</th>
+                                            <th style="width: 50%;">Nama Siswa (Gunakan _ untuk spasi)</th>
+                                            <th style="width: 35%;">Kelas</th>
+                                            <th style="width: 10%; text-align: center;">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="studentTableBody">
+                                        </tbody>
+                                </table>
+                            </div>
+                            <button type="button" class="btn btn-outline-primary btn-sm mt-2 fw-bold" onclick="addStudentRow('', '')">
+                                + Tambah Siswa
+                            </button>
+                        </div>
+                        <h5 class="text-primary border-bottom pb-2 mb-3 mt-4">Resource Limits</h5>
+                        <div class="row mb-3">
+                            <div class="col-md-6 mb-3 mb-md-0">
+                                <label class="form-label fw-semibold">CPU Limit</label>
+                                <div class="input-group">
+                                    <input type="text" name="CONTAINER_CPUS" class="form-control" value="{{ env.CONTAINER_CPUS }}">
+                                    <span class="input-group-text">Cores</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Memory Limit</label>
+                                <div class="input-group">
+                                    <input type="text" name="CONTAINER_MEMORY" class="form-control" value="{{ env.CONTAINER_MEMORY }}">
+                                    <span class="input-group-text">MB/GB</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <h5 class="text-primary border-bottom pb-2 mb-3 mt-4">Networking Ports</h5>
+                        <div class="row mb-4">
+                            <div class="col-md-6 mb-3 mb-md-0">
+                                <label class="form-label fw-semibold">Port MySQL (Host)</label>
+                                <input type="number" name="DB_BASE_PORT" class="form-control" value="{{ env.DB_BASE_PORT }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Port PhpMyAdmin (Host)</label>
+                                <input type="number" name="PMA_BASE_PORT" class="form-control" value="{{ env.PMA_BASE_PORT }}">
+                            </div>
+                        </div>
+
+                        <h5 class="text-primary border-bottom pb-2 mb-3 mt-4">Integrasi</h5>
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Google Sheet API URL Webhook</label>
+                            <input type="url" name="SHEET_API_URL" class="form-control font-monospace" value="{{ env.SHEET_API_URL }}">
+                        </div>
+
+                        <div class="d-grid mt-5">
+                            <button type="submit" class="btn btn-success btn-lg fw-bold shadow-sm">
+                                🚀 SIMPAN & RESET DATABASE
+                            </button>
+                            <div class="text-center text-muted mt-2 small">
+                                Menyimpan akan mematikan sementara container database untuk mengaplikasikan konfigurasi baru.
+                            </div>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const rawData = document.getElementById('hiddenStudentData').value;
+        
+        // 1. Parse data string yang ada saat halaman dimuat
+        if (rawData && rawData.trim() !== '') {
+            const students = rawData.split(',');
+            students.forEach(student => {
+                const parts = student.split('|');
+                if (parts.length === 2) {
+                    addStudentRow(parts[0], parts[1]);
+                }
+            });
+        } else {
+            // Jika kosong, sediakan 1 baris kosong
+            addStudentRow('', ''); 
+        }
+
+        // 2. Cegat saat form disubmit untuk menggabungkan data tabel menjadi string kembali
+        document.getElementById('configForm').addEventListener('submit', function(e) {
+            const tbody = document.getElementById('studentTableBody');
+            const rows = tbody.querySelectorAll('tr');
+            let dataArray = [];
+            
+            rows.forEach(row => {
+                const nameInput = row.querySelector('.student-name').value.trim();
+                const classInput = row.querySelector('.student-class').value.trim();
+                
+                if (nameInput && classInput) {
+                    // Paksa hilangkan koma dan pipa dari input agar tidak merusak format backend
+                    const cleanName = nameInput.replace(/[,|]/g, '');
+                    const cleanClass = classInput.replace(/[,|]/g, '');
+                    dataArray.push(`${cleanName}|${cleanClass}`);
+                }
+            });
+            
+            // Masukkan hasil gabungan (Cth: Nama1|Kelas1,Nama2|Kelas2) ke input tersembunyi
+            document.getElementById('hiddenStudentData').value = dataArray.join(',');
+        });
+    });
+
+    function addStudentRow(name, cls) {
+        const tbody = document.getElementById('studentTableBody');
+        const rowCount = tbody.children.length + 1;
+        const tr = document.createElement('tr');
+        
+        tr.innerHTML = `
+            <td class="align-middle text-center fw-bold text-secondary row-number">${rowCount}</td>
+            <td><input type="text" class="form-control form-control-sm student-name" value="${name}" placeholder="Cth: Aarbian_Indra" required></td>
+            <td><input type="text" class="form-control form-control-sm student-class" value="${cls}" placeholder="Cth: SIJA1" required></td>
+            <td class="text-center">
+                <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeRow(this)" title="Hapus Siswa">✖</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+        updateRowNumbers();
+    }
+
+    function removeRow(button) {
+        const tr = button.closest('tr');
+        tr.remove();
+        updateRowNumbers();
+    }
+
+    function updateRowNumbers() {
+        const rows = document.querySelectorAll('#studentTableBody tr');
+        rows.forEach((row, index) => {
+            row.querySelector('.row-number').textContent = index + 1;
+        });
+    }
+</script>
+
+</body>
+</html>

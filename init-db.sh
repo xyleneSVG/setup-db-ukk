@@ -6,7 +6,7 @@ CSV_FILE="/mnt/kredensial/$FILENAME"
 TEMP_CSV="/tmp/setup.csv"
 JSON_DATA="/tmp/data.json"
 
-echo "nama,db_user,db_pass,database_name" > "$TEMP_CSV"
+echo "nama,kelas,db_user,db_pass,database_name" > "$TEMP_CSV"
 echo "[" > "$JSON_DATA"
 
 declare -A USED_USERNAMES
@@ -18,7 +18,9 @@ for entry in "${ADDR[@]}"; do
     RAW_NAME=$(echo "$entry" | cut -d'|' -f1)
     RAW_CLASS=$(echo "$entry" | cut -d'|' -f2 | tr '[:upper:]' '[:lower:]' | sed 's/ //g')
     DISPLAY_NAME=$(echo "$RAW_NAME" | tr '_' ' ')
-    FULL_DISPLAY_NAME="$DISPLAY_NAME ${RAW_CLASS^^}"
+    
+    FORMATTED_CLASS="${RAW_CLASS^^}" 
+    
     CLEAN_EVENT=$(echo "$EVENT" | tr '[:upper:]' '[:lower:]' | sed 's/ //g')
 
     FIRST_NAME=$(echo "$RAW_NAME" | cut -d'_' -f1 | tr '[:upper:]' '[:lower:]')
@@ -44,31 +46,35 @@ for entry in "${ADDR[@]}"; do
     DB_NAME="db_${CLEAN_EVENT}_$USER_NAME"
     DB_PASS=$(LC_ALL=C tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 8)
 
-    echo "Processing: $FULL_DISPLAY_NAME"
+    echo "Processing: $DISPLAY_NAME - $FORMATTED_CLASS"
 
-    mysql -u root -p"$MYSQL_ROOT_PASSWORD" -e "CREATE DATABASE IF NOT EXISTS \`$DB_NAME\`;"
-    mysql -u root -p"$MYSQL_ROOT_PASSWORD" -e "CREATE USER IF NOT EXISTS '$USER_NAME'@'%' IDENTIFIED BY '$DB_PASS';"
-    mysql -u root -p"$MYSQL_ROOT_PASSWORD" -e "GRANT ALL PRIVILEGES ON \`$DB_NAME\`.* TO '$USER_NAME'@'%';"
-    mysql -u root -p"$MYSQL_ROOT_PASSWORD" -e "FLUSH PRIVILEGES;"
-    mysql -u root -p"$MYSQL_ROOT_PASSWORD" -e "SET GLOBAL log_bin_trust_function_creators = 1;"
-
-    echo "$FULL_DISPLAY_NAME,$USER_NAME,$DB_PASS,$DB_NAME" >> "$TEMP_CSV"
+    MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysql -u root -e "CREATE DATABASE IF NOT EXISTS \`$DB_NAME\`;"
+    MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysql -u root -e "CREATE USER IF NOT EXISTS '$USER_NAME'@'%' IDENTIFIED BY '$DB_PASS';"
+    MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysql -u root -e "GRANT ALL PRIVILEGES ON \`$DB_NAME\`.* TO '$USER_NAME'@'%';"
+    MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysql -u root -e "FLUSH PRIVILEGES;"
+    MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysql -u root -e "SET GLOBAL log_bin_trust_function_creators = 1;"
+    
+    echo "$DISPLAY_NAME,$FORMATTED_CLASS,$USER_NAME,$DB_PASS,$DB_NAME" >> "$TEMP_CSV"
 
     if [ "$FIRST_ENTRY" = true ]; then
         FIRST_ENTRY=false
     else
         echo "," >> "$JSON_DATA"
     fi
-    echo "[\"$FULL_DISPLAY_NAME\", \"$USER_NAME\", \"$DB_PASS\", \"$DB_NAME\"]" >> "$JSON_DATA"
+    
+    echo "[\"$DISPLAY_NAME\", \"$FORMATTED_CLASS\", \"$USER_NAME\", \"$DB_PASS\", \"$DB_NAME\"]" >> "$JSON_DATA"
 done
 
 echo "]" >> "$JSON_DATA"
 
 if [ -n "$SHEET_API_URL" ]; then
     echo "Sending data to Google Sheets..."
-    curl -L -X POST "$SHEET_API_URL" \
+    
+    CLEAN_URL=$(echo "$SHEET_API_URL" | sed -e 's/^"//' -e 's/"$//' -e "s/^'//" -e "s/'$//")
+    
+    curl -L -X POST "$CLEAN_URL" \
         -H "Content-Type: application/json" \
-        -d @"$JSON_DATA"
+        -d @"$JSON_DATA" || true
 fi
 
 cp "$TEMP_CSV" "$CSV_FILE"
