@@ -52,7 +52,6 @@ for entry in "${ADDR[@]}"; do
     MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysql -u root -e "CREATE USER IF NOT EXISTS '$USER_NAME'@'%' IDENTIFIED BY '$DB_PASS';"
     MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysql -u root -e "GRANT ALL PRIVILEGES ON \`$DB_NAME\`.* TO '$USER_NAME'@'%';"
     MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysql -u root -e "FLUSH PRIVILEGES;"
-    MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysql -u root -e "SET GLOBAL log_bin_trust_function_creators = 1;"
     
     echo "$DISPLAY_NAME,$FORMATTED_CLASS,$USER_NAME,$DB_PASS,$DB_NAME" >> "$TEMP_CSV"
 

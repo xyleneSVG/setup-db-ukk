@@ -5,6 +5,7 @@ services:
     image: mysql:latest
     container_name: ukk_database
     restart: always
+    command: --log-bin-trust-function-creators=1
     deploy:
       resources:
         limits:
