@@ -1,0 +1,1 @@
+docker exec -it ukk_database mysql -u root -p$(grep DB_ROOT_PASSWORD .env | cut -d '=' -f2) -e "SET GLOBAL log_bin_trust_function_creators = ON;"
